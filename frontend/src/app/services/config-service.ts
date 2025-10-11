@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { ConfigLoaderService } from './config-loader-service';
 
 @Injectable({
@@ -14,12 +14,15 @@ export class ConfigService {
     return this.http.get<any[]>(`${this.config.apiBaseUrl}/config/teams`);
   }
 
-  getBudget(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.config.apiBaseUrl}/config/budget`);
-  }
+getBudget(): Observable<{ VirtualBudget: number }> {
+  return this.http.get<{ VirtualBudget: number }>(`${this.config.apiBaseUrl}/config/budget`);
+}
 
-  getPositions(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.config.apiBaseUrl}/config/positions`);
+  /** Fetch positions dynamically */
+  getPositions(): Observable<string[]> {
+    return this.http.get<{ positions: string[] }>(`${this.config.apiBaseUrl}/config/positions`).pipe(
+      map(res => [...res.positions])
+    );
   }
 
   getUsers(): Observable<any> {

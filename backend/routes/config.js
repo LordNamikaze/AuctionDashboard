@@ -56,8 +56,12 @@ router.get('/teams', async (req, res) => {
 
 router.get('/budget', async (req, res) => {
   try {
-    const data = await readSheetData(3);
-    res.json(data);
+    const data = await readSheetData(3); // original returns array
+    if (data && data.length > 0) {
+      res.json(data[0]); // return only the first object
+    } else {
+      res.json({ VirtualBudget: 0 }); // default if empty
+    }
   } catch (err) {
     console.error('Error reading Budget sheet:', err);
     res.status(500).json({ error: err.message });
@@ -66,8 +70,12 @@ router.get('/budget', async (req, res) => {
 
 router.get('/positions', async (req, res) => {
   try {
-    const data = await readSheetData(4);
-    res.json(data);
+    const data = await readSheetData(4); // returns [{ Positions: "GK" }, ...]
+    
+    // Map the objects to just the position values
+    const positions = data.map(row => row.Positions).filter(Boolean);
+
+    res.json({ positions }); // wrap in an object
   } catch (err) {
     console.error('Error reading Positions sheet:', err);
     res.status(500).json({ error: err.message });

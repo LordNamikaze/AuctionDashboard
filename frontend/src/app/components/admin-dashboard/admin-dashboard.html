@@ -1,75 +1,111 @@
 <div class="container-fluid" *ngIf="!loading() && !errorMessage()">
   <div class="row mt-3">
-    <!-- Left panel: Player info -->
-    <div class="col-md-8">
-      <div class="card shadow-sm mb-3" *ngIf="currentPlayer()">
-        <div class="card-body">
-          <h3 class="card-title">{{ currentPlayer()?.Name }}</h3>
-          <p class="text-muted">ID: {{ currentPlayer()?.PlayerID }}</p>
 
-          <div class="row">
-            <div class="col-md-6">
-              <p>
-                <strong>Primary:</strong> {{ currentPlayer()?.PrimaryPosition }}<br />
-                <strong>Secondary:</strong> {{ currentPlayer()?.SecondaryPosition }}
-              </p>
-              <p>
-                <strong>Base Price:</strong> {{ currentPlayer()?.BasePrice }}
-              </p>
+    <!-- Left panel: Auctioning controls -->
+    <div class="col-md-8 d-flex flex-column" style="height: 100vh;">
+
+      <!-- Dropdowns for positions -->
+<div *ngIf="positions().length > 0" class="d-flex gap-3 mb-3">
+  <div class="flex-grow-1">
+    <label class="form-label">Primary Position</label>
+    <select class="form-select" [ngModel]="primarySelection()" (ngModelChange)="setPrimarySelection($any($event))">
+      <option *ngFor="let pos of positions()" [value]="pos">{{ pos }}</option>
+    </select>
+  </div>
+
+  <div class="flex-grow-1">
+    <label class="form-label">Secondary Position</label>
+    <select class="form-select" [ngModel]="secondarySelection()" (ngModelChange)="setSecondarySelection($any($event))">
+      <option *ngFor="let pos of positions()" [value]="pos">{{ pos }}</option>
+    </select>
+  </div>
+</div>
+
+      <!-- Player card -->
+      <div class="card shadow-sm flex-grow-1 d-flex flex-column justify-content-center">
+        <div class="card-body d-flex flex-column align-items-center">
+
+          <!-- Player info row -->
+          <div class="row align-items-center mb-3 w-100">
+            <!-- Left column - Positions -->
+            <div class="col-md-3 d-flex flex-column justify-content-center">
+              <div class="text-center">
+                <p class="mb-2"><strong>Primary: </strong> <span class="fs-5">{{ currentPlayer()?.PrimaryPosition }}</span></p>
+                <p class="mb-0"><strong>Secondary: </strong> <span class="fs-5">{{ currentPlayer()?.SecondaryPosition }}</span></p>
+              </div>
             </div>
 
-            <div class="col-md-6">
-              <div class="mb-2">
-                <label class="form-label">Sold Price</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  [ngModel]="sellingPrice()"
-                  (ngModelChange)="sellingPrice.set($any($event))"
-                  placeholder="Enter sold price"
-                />
+            <!-- Middle column - Image -->
+            <div class="col-md-6 text-center">
+              <div style="width: 350px; height: 500px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                <img [src]="this.imageSource" 
+                     (error)="$event.target.src='assets/FallBack_KuchNahi.png'"
+                     alt="Player" 
+                     class="img-thumbnail"
+                     style="max-width: 100%; max-height: 100%; object-fit: contain;">
               </div>
+            </div>
 
-              <div class="mb-2">
-                <label class="form-label">Assign Team</label>
-                <select
-                  class="form-select"
-                  [ngModel]="selectedTeam()"
-                  (ngModelChange)="selectedTeam.set($any($event))"
-                >
-                  <option value="">Select a Team</option>
-                  <option *ngFor="let t of teams()" [value]="t.TeamName">
-                    {{ t.TeamName }}
-                  </option>
-                </select>
+            <!-- Right column - Name and Price -->
+            <div class="col-md-3 d-flex flex-column justify-content-center">
+              <div class="text-center">
+                <p class="mb-2"><strong>{{currentPlayer()?.PlayerID}}. {{ currentPlayer()?.Name }}</strong></p>
+                <p class="mb-0"><strong>Base Price:</strong> {{ currentPlayer()?.BasePrice }}</p>
               </div>
-
-              <button class="btn btn-success me-2" (click)="sellPlayer()">💰 Sell</button>
-              <button class="btn btn-outline-secondary me-2" (click)="previousPlayer()">⬅️ Prev</button>
-              <button class="btn btn-outline-secondary" (click)="nextPlayer()">Next ➡️</button>
             </div>
           </div>
+
+          <!-- Inputs below player -->
+          <div class="row w-100">
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Sold Price</label>
+              <input type="number" class="form-control"
+                     [ngModel]="currentPlayer()?.SoldPrice || sellingPrice()" 
+                     (ngModelChange)="sellingPrice.set($any($event))"
+                     [class.border-success]="currentPlayer()?.SoldPrice"
+                     [class.border-3]="currentPlayer()?.SoldPrice"
+                     placeholder="Enter sold price"/>
+            </div>
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Assign Team</label>
+              <select class="form-select" 
+                      [ngModel]="currentPlayer()?.TeamAssigned || selectedTeam()" 
+                      (ngModelChange)="selectedTeam.set($any($event))"
+                      [class.border-success]="currentPlayer()?.TeamAssigned"
+                      [class.border-3]="currentPlayer()?.TeamAssigned">
+                <option value="">Select a Team</option>
+                <option *ngFor="let t of teams()" [value]="t.TeamName">{{ t.TeamName }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="mt-3">
+            <button class="btn btn-success me-2" (click)="sellPlayer()">💰 Sell</button>
+            <button class="btn btn-outline-secondary me-2" (click)="previousPlayer()">⬅️ Prev</button>
+            <button class="btn btn-outline-secondary" (click)="nextPlayer()">Next ➡️</button>
+          </div>
+
+          <!-- Team Budgets -->
+          <div class="mt-4 w-100">
+            <h5 class="text-center mb-3">Remaining Team Budgets</h5>
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+              <div *ngFor="let team of teams()" 
+                   class="badge bg-light text-dark p-2 border fs-5"
+                   [class.border-danger]="(remainingBudgets().get(team.TeamName) || 0) < 1000000">
+                {{ team.TeamName }}: {{ remainingBudgets().get(team.TeamName) | number }}
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
 
     <!-- Right panel: Upcoming players -->
-    <div class="col-md-4">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h5>Upcoming Players</h5>
-        <select
-          class="form-select w-auto"
-          [ngModel]="selectedGroup()"
-          (ngModelChange)="changeGroup($any($event))"
-        >
-          <option value="">All</option>
-          <option *ngFor="let pos of ['Forward', 'Midfielder', 'Defender', 'Goalkeeper']">
-            {{ pos }}
-          </option>
-        </select>
-      </div>
-
-      <div class="list-group overflow-auto" style="max-height: 70vh;">
+    <div class="col-md-4" style="height: 100vh; overflow-y: auto;">
+      <h5>Upcoming Players</h5>
+      <div class="list-group">
         <div *ngFor="let p of upcomingPlayers()" class="list-group-item small">
           <strong>{{ p.Name }}</strong><br />
           {{ p.PrimaryPosition }} / {{ p.SecondaryPosition }}
@@ -77,6 +113,7 @@
         </div>
       </div>
     </div>
+
   </div>
 </div>
 

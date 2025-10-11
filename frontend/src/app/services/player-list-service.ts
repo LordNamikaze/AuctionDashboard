@@ -21,7 +21,7 @@ export class PlayerListService {
       this.configService.getBudget()
     ]).pipe(
       map(([players, teams, budget]) => {
-        const virtualBudget = budget[0]?.VirtualBudget || 0;
+        const virtualBudget = budget?.VirtualBudget || 0;
         const summary = this.computeTeamSummary(players, teams, virtualBudget);
         return { players, teams, budget: virtualBudget, summary };
       })
