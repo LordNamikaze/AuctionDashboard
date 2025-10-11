@@ -1,1 +1,71 @@
-<p>player-list works!</p>
+<div class="players-teams-container">
+
+  <!-- Hidden radios for toggle -->
+  <input type="radio" name="viewToggle" id="togglePlayers" checked>
+  <input type="radio" name="viewToggle" id="toggleTeams">
+
+  <!-- Labels as buttons -->
+  <div class="view-toggle">
+    <label for="togglePlayers" class="toggle-btn">Players</label>
+    <label for="toggleTeams" class="toggle-btn">Teams</label>
+  </div>
+
+  <!-- Players View -->
+  <div class="players-view">
+    <mat-card class="players-card">
+    <div class="filters">
+        <mat-form-field appearance="outline" class="filter-field small-dropdown">
+        <mat-label>Primary</mat-label>
+        <mat-select (ngModel)="primarySelection()" (selectionChange)="setPrimarySelection($event.value)">
+            <mat-option *ngFor="let pos of positions()" [value]="pos">{{ pos }}</mat-option>
+        </mat-select>
+        </mat-form-field>
+    
+        <mat-form-field appearance="outline" class="filter-field small-dropdown">
+        <mat-label>Secondary</mat-label>
+        <mat-select (ngModel)="secondarySelection()" (selectionChange)="setSecondarySelection($event.value)">
+            <mat-option *ngFor="let pos of positions()" [value]="pos">{{ pos }}</mat-option>
+        </mat-select>
+        </mat-form-field>
+    </div>
+
+
+      <div class="players-list table-wrapper">
+        <div *ngFor="let p of filteredPlayers()" class="player-item">
+          <div class="player-name">{{ p.Name }}</div>
+          <div class="player-position">{{ p.PrimaryPosition }} / {{ p.SecondaryPosition }}</div>
+          <div class="player-base">Base: {{ p.BasePrice }}</div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Teams View -->
+  <div class="teams-view">
+    <div class="teams-grid">
+      <mat-card *ngFor="let team of teamCompositions(); let i = index" 
+                [ngClass]="['team-border-' + (i % 6)]">
+        <h2 class="team-title">{{ team.name }}</h2>
+
+        <div class="table-wrapper">
+          <table mat-table [dataSource]="team.members">
+            <ng-container matColumnDef="player">
+              <th mat-header-cell *matHeaderCellDef> Player </th>
+              <td mat-cell *matCellDef="let p"> {{ p?.Name }} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="price">
+              <th mat-header-cell *matHeaderCellDef> Sold Price </th>
+              <td mat-cell *matCellDef="let p"> {{ p?.SoldPrice || '-' }} </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['player','price']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['player','price']"></tr>
+          </table>
+        </div>
+
+        <div class="team-total">Total Cost: {{ team.totalCost }}</div>
+      </mat-card>
+    </div>
+  </div>
+</div>

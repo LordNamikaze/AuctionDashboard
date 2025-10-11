@@ -1,0 +1,33 @@
+<div class="login-container">
+  <div class="login-box">
+    <h1 class="title">Auction Dashboard</h1>
+    
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <input 
+          type="email" 
+          class="form-control" 
+          formControlName="email" 
+          placeholder="Enter your email"
+        >
+        <div class="validation-error" *ngIf="loginForm.get('email')?.errors?.['required'] && loginForm.get('email')?.touched">
+          Email is required
+        </div>
+        <div class="validation-error" *ngIf="loginForm.get('email')?.errors?.['email'] && loginForm.get('email')?.touched">
+          Please enter a valid email
+        </div>
+      </div>
+
+      <button 
+        class="login-button" 
+        type="submit" 
+        [disabled]="!loginForm.valid">
+        Login
+      </button>
+
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+    </form>
+  </div>
+</div>
