@@ -1,0 +1,90 @@
+<div class="container-fluid" *ngIf="!loading() && !errorMessage()">
+  <div class="row mt-3">
+    <!-- Left panel: Player info -->
+    <div class="col-md-8">
+      <div class="card shadow-sm mb-3" *ngIf="currentPlayer()">
+        <div class="card-body">
+          <h3 class="card-title">{{ currentPlayer()?.Name }}</h3>
+          <p class="text-muted">ID: {{ currentPlayer()?.PlayerID }}</p>
+
+          <div class="row">
+            <div class="col-md-6">
+              <p>
+                <strong>Primary:</strong> {{ currentPlayer()?.PrimaryPosition }}<br />
+                <strong>Secondary:</strong> {{ currentPlayer()?.SecondaryPosition }}
+              </p>
+              <p>
+                <strong>Base Price:</strong> {{ currentPlayer()?.BasePrice }}
+              </p>
+            </div>
+
+            <div class="col-md-6">
+              <div class="mb-2">
+                <label class="form-label">Sold Price</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  [ngModel]="sellingPrice()"
+                  (ngModelChange)="sellingPrice.set($any($event))"
+                  placeholder="Enter sold price"
+                />
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Assign Team</label>
+                <select
+                  class="form-select"
+                  [ngModel]="selectedTeam()"
+                  (ngModelChange)="selectedTeam.set($any($event))"
+                >
+                  <option value="">Select a Team</option>
+                  <option *ngFor="let t of teams()" [value]="t.TeamName">
+                    {{ t.TeamName }}
+                  </option>
+                </select>
+              </div>
+
+              <button class="btn btn-success me-2" (click)="sellPlayer()">💰 Sell</button>
+              <button class="btn btn-outline-secondary me-2" (click)="previousPlayer()">⬅️ Prev</button>
+              <button class="btn btn-outline-secondary" (click)="nextPlayer()">Next ➡️</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right panel: Upcoming players -->
+    <div class="col-md-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5>Upcoming Players</h5>
+        <select
+          class="form-select w-auto"
+          [ngModel]="selectedGroup()"
+          (ngModelChange)="changeGroup($any($event))"
+        >
+          <option value="">All</option>
+          <option *ngFor="let pos of ['Forward', 'Midfielder', 'Defender', 'Goalkeeper']">
+            {{ pos }}
+          </option>
+        </select>
+      </div>
+
+      <div class="list-group overflow-auto" style="max-height: 70vh;">
+        <div *ngFor="let p of upcomingPlayers()" class="list-group-item small">
+          <strong>{{ p.Name }}</strong><br />
+          {{ p.PrimaryPosition }} / {{ p.SecondaryPosition }}
+          <span class="float-end text-muted">Base: {{ p.BasePrice }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="loading()" class="text-center mt-5">
+  <div class="spinner-border text-primary"></div>
+  <p>Loading data...</p>
+</div>
+
+<div *ngIf="errorMessage()" class="alert alert-danger text-center mt-3">
+  {{ errorMessage() }}
+</div>
