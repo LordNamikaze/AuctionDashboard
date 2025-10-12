@@ -27,6 +27,14 @@ export class AdminDashboard implements OnInit {
   imageSource: string = 'assets/FallBack_KuchNahi.jpg';
 
   // Computed signal for remaining budgets
+  teamPlayerCounts = computed(() => {
+    const counts = new Map<string, number>();
+    this.teams().forEach(team => {
+      counts.set(team.TeamName, this.players().filter(p => p.TeamAssigned === team.TeamName).length);
+    });
+    return counts;
+  });
+
   remainingBudgets = computed(() => {
     const budgets = new Map<string, number>();
     

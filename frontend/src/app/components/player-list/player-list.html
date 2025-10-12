@@ -42,16 +42,19 @@
 
   <!-- Teams View -->
   <div class="teams-view">
+    <div class="refresh-bar">
+      <button class="refresh-button" (click)="refreshTeams()">↻ Refresh Teams</button>
+    </div>
     <div class="teams-grid">
       <mat-card *ngFor="let team of teamCompositions(); let i = index" 
                 [ngClass]="['team-border-' + (i % 6)]">
-        <h2 class="team-title">{{ team.name }}</h2>
+        <h2 class="team-title">Team {{ team.name }}</h2>
 
         <div class="table-wrapper">
           <table mat-table [dataSource]="team.members">
             <ng-container matColumnDef="player">
               <th mat-header-cell *matHeaderCellDef> Player </th>
-              <td mat-cell *matCellDef="let p"> {{ p?.Name }} </td>
+              <td mat-cell *matCellDef="let p"> {{ p?.Name }}{{p?.PlayerID === team.capID ? ' (C)' : ''}}{{p?.PlayerID === team.viceCapID ? ' (VC)' : ''}} </td>
             </ng-container>
 
             <ng-container matColumnDef="price">

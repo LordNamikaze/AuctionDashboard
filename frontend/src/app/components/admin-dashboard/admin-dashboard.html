@@ -91,9 +91,10 @@
             <h5 class="text-center mb-3">Remaining Team Budgets</h5>
             <div class="d-flex flex-wrap justify-content-center gap-3">
               <div *ngFor="let team of teams()" 
-                   class="badge bg-light text-dark p-2 border fs-5"
+                   class="badge bg-light text-dark p-2 border fs-5 d-flex flex-column"
                    [class.border-danger]="(remainingBudgets().get(team.TeamName) || 0) < 1000000">
-                {{ team.TeamName }}: {{ remainingBudgets().get(team.TeamName) | number }}
+                <div>{{ team.TeamName }}: {{ remainingBudgets().get(team.TeamName) | number }}</div>
+                <div class="small">Players: {{ teamPlayerCounts().get(team.TeamName) }}</div>
               </div>
             </div>
           </div>

@@ -35,6 +35,10 @@ export class PlayerList implements OnInit {
   loading = signal(true);
   errorMessage = signal('');
 
+  refreshTeams() {
+this.loadData();
+  }
+
   constructor(
     private playerService: PlayerService,
     private configService: ConfigService
@@ -106,7 +110,9 @@ export class PlayerList implements OnInit {
       return {
         name: team.TeamName,
         members,
-        totalCost
+        totalCost,
+        capID:team.CapID,
+        viceCapID:team.ViceCapID
       };
     });
   });
