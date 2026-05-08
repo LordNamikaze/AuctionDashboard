@@ -44,6 +44,22 @@ async function readSheetData(sheetIndex) {
 // GET /config/budget       → Sheet 3
 // GET /config/positions    → Sheet 4
 // ================================
+/**
+ * @swagger
+ * /config/teams:
+ *   get:
+ *     summary: Get all teams
+ *     description: Returns team configuration from the Teams sheet.
+ *     responses:
+ *       200:
+ *         description: Array of team objects
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ */
 router.get('/teams', async (req, res) => {
   try {
     const data = await readSheetData(2);
@@ -54,6 +70,23 @@ router.get('/teams', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /config/budget:
+ *   get:
+ *     summary: Get budget configuration
+ *     description: Returns budget settings from the Budget sheet.
+ *     responses:
+ *       200:
+ *         description: Budget object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 VirtualBudget:
+ *                   type: number
+ */
 router.get('/budget', async (req, res) => {
   try {
     const data = await readSheetData(3); // original returns array
@@ -68,6 +101,25 @@ router.get('/budget', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /config/positions:
+ *   get:
+ *     summary: Get available positions
+ *     description: Returns all player positions from the Positions sheet.
+ *     responses:
+ *       200:
+ *         description: Positions list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 positions:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ */
 router.get('/positions', async (req, res) => {
   try {
     const data = await readSheetData(4); // returns [{ Positions: "GK" }, ...]
@@ -85,30 +137,66 @@ router.get('/positions', async (req, res) => {
 // ================================
 // GET /config/users  → Sheet 5
 // ================================
+/**
+ * @swagger
+ * /config/users:
+ *   get:
+ *     summary: Get users
+ *     description: Returns all user records from the Users sheet.
+ *     responses:
+ *       200:
+ *         description: Users list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       Email:
+ *                         type: string
+ *                       Name:
+ *                         type: string
+ *                       Role:
+ *                         type: string
+ */
 router.get('/users', async (req, res) => {
   try {
     const wb = await readWorkbook();
     const sheet = wb.getWorksheet(5); // Sheet 5 – Users
     if (!sheet) return res.status(500).json({ error: 'Sheet5 not found' });
 
-    // Read header row (Admins | ReadOnlyUsers)
-    const headers = {};
+    const headerMap = {};
     sheet.getRow(1).eachCell((cell, col) => {
-      headers[col] = String(cell.value).trim();
+      const header = String(cell.value || '').trim().toLowerCase();
+      headerMap[header] = col;
     });
 
-    // Collect all email IDs under each column
-    const users = { Admins: [], ReadOnlyUsers: [] };
+    const emailCol = headerMap.email;
+    const nameCol = headerMap.name;
+    const roleCol = headerMap.role;
 
+    if (!emailCol || !nameCol || !roleCol) {
+      return res.status(500).json({ error: 'Users sheet must have Email, Name and Role headers' });
+    }
+
+    const users = [];
     sheet.eachRow((row, rowNum) => {
-      if (rowNum === 1) return; // skip header
-      const admin = row.getCell(1).value;
-      const readOnly = row.getCell(2).value;
-      if (admin) users.Admins.push(String(admin).trim());
-      if (readOnly) users.ReadOnlyUsers.push(String(readOnly).trim());
+      if (rowNum === 1) return;
+      const email = String(row.getCell(emailCol).value || '').trim();
+      const name = String(row.getCell(nameCol).value || '').trim();
+      const role = String(row.getCell(roleCol).value || '').trim().toLowerCase();
+
+      if (!email || !role) return;
+      if (!['admin', 'bidder', 'readonly'].includes(role)) return;
+
+      users.push({ Email: email, Name: name, Role: role });
     });
 
-    res.json(users);
+    res.json({ users });
   } catch (err) {
     console.error('Error reading Users sheet:', err);
     res.status(500).json({ error: err.message });

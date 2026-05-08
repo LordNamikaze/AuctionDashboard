@@ -2,6 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const os = require('os');
 
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
@@ -26,7 +27,7 @@ const swaggerOptions = {
       { url: "http://localhost:3000" }
     ]
   },
-  apis: ["./routes/*.js"] // <-- scan all route files for Swagger comments
+  apis: ["./routes/*.js", "./server.js"] // <-- scan all route files and server.js for Swagger comments
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
@@ -43,12 +44,44 @@ app.use('/players', playerRoutes);
 app.use('/config', configRoutes);
 
 // Root endpoint - sanity check
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Health check
+ *     description: Returns a simple server status response.
+ *     responses:
+ *       200:
+ *         description: Server is running
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ */
 app.get('/', (req, res) => {
   res.send('✅ Auction backend running successfully!');
 });
 
+function getLocalIpv4Addresses() {
+  const interfaces = os.networkInterfaces();
+  const addresses = [];
+
+  for (const name of Object.keys(interfaces)) {
+    for (const net of interfaces[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        addresses.push(net.address);
+      }
+    }
+  }
+
+  return addresses;
+}
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server started on http://localhost:${PORT} and  http://192.168.1.148:3000/`);
+  const localIps = getLocalIpv4Addresses();
+  const externalUrls = localIps.map(ip => `http://${ip}:${PORT}`);
+  const urlList = ['http://localhost:' + PORT, ...externalUrls].join(' and ');
+  console.log(`🚀 Server started on ${urlList}`);
 });

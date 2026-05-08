@@ -2,7 +2,17 @@ import { Injectable } from '@angular/core';
 import { ConfigService } from './config-service';
 import { firstValueFrom } from 'rxjs';
 
-export type UserRole = 'admin' | 'readonly' | null;
+export type UserRole = 'admin' | 'bidder' | 'readonly' | null;
+
+interface UserRecord {
+  Email: string;
+  Name: string;
+  Role: string;
+}
+
+interface UsersResponse {
+  users: UserRecord[];
+}
 
 @Injectable({
   providedIn: 'root'
@@ -15,24 +25,27 @@ export class AuthService {
 
   async login(email: string): Promise<UserRole> {
     try {
-      const users = await firstValueFrom(this.configService.getUsers());
-      
-      if (users.Admins.includes(email)) {
-        this.currentRole = 'admin';
+      const result = await firstValueFrom(this.configService.getUsers()) as UsersResponse;
+      const normalizedEmail = String(email).trim().toLowerCase();
+      const user = result.users?.find(u => String(u.Email || '').trim().toLowerCase() === normalizedEmail);
+
+      if (!user) {
+        this.currentRole = null;
+        this.isAuthenticated = false;
+        throw new Error('Invalid email');
+      }
+
+      const role = String(user.Role || '').trim().toLowerCase();
+      if (role === 'admin' || role === 'bidder' || role === 'readonly') {
+        this.currentRole = role as UserRole;
         this.isAuthenticated = true;
-        return 'admin';
-      } 
-      
-      if (users.ReadOnlyUsers.includes(email)) {
-        this.currentRole = 'readonly';
-        this.isAuthenticated = true;
-        return 'readonly';
+        return this.currentRole;
       }
 
       this.currentRole = null;
       this.isAuthenticated = false;
-      throw new Error('Invalid email');
-      
+      throw new Error('Invalid role');
+
     } catch (error) {
       this.currentRole = null;
       this.isAuthenticated = false;
